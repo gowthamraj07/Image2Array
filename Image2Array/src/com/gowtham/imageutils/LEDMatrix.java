@@ -2,6 +2,9 @@ package com.gowtham.imageutils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.imageio.IIOException;
 import javax.imageio.ImageIO;
@@ -13,15 +16,17 @@ import com.pi4j.system.NetworkInfo;
 import com.pi4j.system.SystemInfo;
 
 public class LEDMatrix {
+	
+	private static final int MATRIX_HEIGHT = 16;
+	private static final int MATRIX_WIDTH = 16;
+	private static final List<I2CDevice> DEVICES = new LinkedList<I2CDevice>();
+	
 
-	//	package de.buschbaum.java.pathfinder;
-
-
+	// package de.buschbaum.java.pathfinder;
 
 	/**
 	 * Hello world!
 	 */
-
 
 	public static void main(String[] args) {
 		try {
@@ -29,84 +34,87 @@ public class LEDMatrix {
 			System.out.println("Creating I2C bus");
 			I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
 			System.out.println("Creating I2C device");
-			I2CDevice device = bus.getDevice(0x08);
-
-			//byte[] writeData = new byte[1];
-			long waitTimeSent = 5000;
-			//long waitTimeRead = 5000;
-
-			while (true) {
-				/*//negative values don't work
-				//new Random().nextBytes(writeData);
-				//System.out.println("Writing " + writeData[0] + " via I2C");
-				device.write(Integer.valueOf(8).byteValue());
-				System.out.println("Waiting 5 seconds");
-				Thread.sleep(waitTimeSent);
-				device.write(Integer.valueOf(7).byteValue());
-				System.out.println("Waiting 5 seconds");
-				Thread.sleep(waitTimeSent);
-				device.write(Integer.valueOf(6).byteValue());
-				System.out.println("Waiting 5 seconds");
-				Thread.sleep(waitTimeSent);
-				device.write(Integer.valueOf(4).byteValue());
-				System.out.println("Waiting 5 seconds");
-				Thread.sleep(waitTimeSent);*/
-
-				//Display [0][0]
-				for(int z=0;z<16;z++){
-					try {
-						int result[][] = getEmptyMatrix();
-						result[z][z] = 1;
-						for(int i=0;i<result.length;i++){
-							for(int j=0;j<result[i].length;j++){
-								System.out.print(Integer.valueOf(result[i][j]).byteValue());
-								device.write(Integer.valueOf(result[i][j]).byteValue());
-
-							}
-							System.out.println();
-						}
-						device.write(Integer.valueOf(2).byteValue());
-						Thread.sleep(waitTimeSent);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+			//I2CDevice device = bus.getDevice(0x08);
+			for(String deviceId : args) {
+				try {
+					DEVICES.add(bus.getDevice(Integer.parseInt(deviceId)));
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
 				}
+			}
+
+			long waitTimeSent = 1000;
+			
+			/*for (int z = 0; z < 16; z++) {
+			try {
+				int result[][] = getEmptyMatrix();
+				result[z][z] = 1;
+				for (int i = 0; i < result.length; i++) {
+					for (int j = 0; j < result[i].length; j++) {
+						System.out.print(Integer.valueOf(result[i][j]).byteValue());
+						device.write(Integer.valueOf(result[i][j]).byteValue());
+
+					}
+					System.out.println();
+				}
+				device.write(Integer.valueOf(2).byteValue());
+				Thread.sleep(waitTimeSent);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			}*/
+			
+			try {
+
+				int i = 0, j = 0, width = 0, height = 0, displacement = 0;
+				File image = new File("Text.png");
+				System.out.println("File Name : " + image.getAbsolutePath());
+				int res[][] = ImageProcessor.getBWImage(ImageIO.read(image));
 
 
+				while (true) {
 
+					int devicePosition = 1;
+					for(I2CDevice device : DEVICES) {
 
-				File imageFolder = new File("16x16/16x16");
-				File images[] = imageFolder.listFiles();
-				for(File image : images){
-					try{
-						System.out.println("File Name : "+image.getAbsolutePath());
-						int res[][] = ImageProcessor.getBWImage(ImageIO.read(image));
-						for(int i=0;i<res.length;i++){
-							for(int j=0;j<res[i].length;j++){
+						//Calculate HEIGHT to display
+						if(MATRIX_HEIGHT < res.length) {
+							height = MATRIX_HEIGHT;
+						} else {
+							height = res.length;
+						}
+
+						//Calculate WIDTH to display
+						if((displacement + (MATRIX_WIDTH*devicePosition)) < res[0].length) {
+							width = (displacement + (MATRIX_WIDTH*devicePosition));
+						} else {
+							width = res[0].length;
+						}
+
+						//Write to Displays
+						for (i = 0; i < height; i++) {
+							for (j = displacement + (MATRIX_WIDTH * (devicePosition-1)) ; j < width; j++) {
 								System.out.print(Integer.valueOf(res[i][j]).byteValue());
 								device.write(Integer.valueOf(res[i][j]).byteValue());
-								//Thread.sleep(2000);
-								//device.read();
 							}
 							System.out.println();
 						}
 						device.write(Integer.valueOf(2).byteValue());
-						//device.read();
-						Thread.sleep(waitTimeSent);
-					} catch(IIOException e) {
-						e.printStackTrace();
-					} catch(IOException e) {
-						e.printStackTrace();
-					} catch (UnsatisfiedLinkError e) {
-						e.printStackTrace();
-					} catch (NoClassDefFoundError e) {
-						e.printStackTrace();
-					} catch (Exception e) {
-						e.printStackTrace();
 					}
+					Thread.sleep(waitTimeSent);
+					displacement++;
 				}
-
+			} catch (IIOException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (UnsatisfiedLinkError e) {
+				e.printStackTrace();
+			} catch (NoClassDefFoundError e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -115,10 +123,10 @@ public class LEDMatrix {
 		}
 	}
 
-	private static int[][] getEmptyMatrix(){
+	private static int[][] getEmptyMatrix() {
 		int res[][] = new int[16][16];
-		for(int i=0;i<16;i++) {
-			for(int j=0;j<16;j++) {
+		for (int i = 0; i < 16; i++) {
+			for (int j = 0; j < 16; j++) {
 				res[i][j] = 0;
 			}
 		}
@@ -134,13 +142,16 @@ public class LEDMatrix {
 		System.out.println("CPU Revision      :  " + SystemInfo.getCpuRevision());
 		System.out.println("CPU Architecture  :  " + SystemInfo.getCpuArchitecture());
 		System.out.println("CPU Part          :  " + SystemInfo.getCpuPart());
-		//System.out.println("CPU Temperature   :  " + SystemInfo.getCpuTemperature());
-		//System.out.println("CPU Core Voltage  :  " + SystemInfo.getCpuVoltage());
-		//	        System.out.println("CPU Model Name    :  " + SystemInfo.getModelName());
-		//	        System.out.println("Processor         :  " + SystemInfo.getProcessor());
+		// System.out.println("CPU Temperature : " +
+		// SystemInfo.getCpuTemperature());
+		// System.out.println("CPU Core Voltage : " +
+		// SystemInfo.getCpuVoltage());
+		// System.out.println("CPU Model Name : " + SystemInfo.getModelName());
+		// System.out.println("Processor : " + SystemInfo.getProcessor());
 		System.out.println("Hardware Revision :  " + SystemInfo.getRevision());
 		System.out.println("Is Hard Float ABI :  " + SystemInfo.isHardFloatAbi());
-		//System.out.println("Board Type        :  " + SystemInfo.getBoardType().name());
+		// System.out.println("Board Type : " +
+		// SystemInfo.getBoardType().name());
 
 		System.out.println("----------------------------------------------------");
 		System.out.println("MEMORY INFO");
