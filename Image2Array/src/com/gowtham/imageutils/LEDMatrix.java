@@ -67,7 +67,7 @@ public class LEDMatrix {
 			
 			try {
 
-				int i = 0, j = 0, width = 0, height = 0, displacement = 0;
+				int i = 0, j = 0, width = 0, height = 0, displacement = 0, prefix = DEVICES.size() * MATRIX_WIDTH;
 				File image = new File("Text.png");
 				System.out.println("File Name : " + image.getAbsolutePath());
 				int res[][] = ImageProcessor.getBWImage(ImageIO.read(image));
@@ -95,15 +95,35 @@ public class LEDMatrix {
 						//Write to Displays
 						for (i = 0; i < height; i++) {
 							for (j = displacement + (MATRIX_WIDTH * (devicePosition-1)) ; j < width; j++) {
-								System.out.print(Integer.valueOf(res[i][j]).byteValue());
-								device.write(Integer.valueOf(res[i][j]).byteValue());
+								if(j<prefix) { //To display preceding empty spaces
+									System.out.print(Integer.valueOf(0).byteValue());
+									device.write(Integer.valueOf(0).byteValue());
+								} else { // To display the actual data
+									System.out.print(Integer.valueOf(res[i][j-prefix]).byteValue());
+									device.write(Integer.valueOf(res[i][j-prefix]).byteValue());
+								}
+							}
+							if(width == res[0].length) { //To Display the following empty spaces
+								for (int x = 0; x < width % MATRIX_WIDTH; x++) { 
+									System.out.print(Integer.valueOf(0).byteValue());
+									device.write(Integer.valueOf(0).byteValue());
+								}
 							}
 							System.out.println();
 						}
 						device.write(Integer.valueOf(2).byteValue());
 					}
 					Thread.sleep(waitTimeSent);
-					displacement++;
+					
+					if(prefix > 0){
+						prefix--;
+					} else {
+						displacement++;
+					}
+					
+					if(displacement == (res[0].length * 2) ) { //To restart the loop from right end
+						displacement = 0;
+					}
 				}
 			} catch (IIOException e) {
 				e.printStackTrace();
