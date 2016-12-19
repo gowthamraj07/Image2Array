@@ -21,9 +21,18 @@ public class Text2ImageConvertor {
            a small, temporary image so we can ascertain the width and height
            of the final image
          */
-        BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        
+        try {
+            ImageIO.write(getBufferedImage(text), "png", new File("Text.png"));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+	}
+	
+	public static BufferedImage getBufferedImage(String text) {
+		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
-        Font font = new Font("Arial", Font.PLAIN, 14);
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
         g2d.setFont(font);
         FontMetrics fm = g2d.getFontMetrics();
         int width = fm.stringWidth(text);
@@ -45,10 +54,6 @@ public class Text2ImageConvertor {
         g2d.setColor(Color.WHITE);
         g2d.drawString(text, 0, fm.getAscent());
         g2d.dispose();
-        try {
-            ImageIO.write(img, "png", new File("Text.png"));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+        return img;
 	}
 }

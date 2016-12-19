@@ -1,7 +1,6 @@
 package com.gowtham.imageutils;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -13,22 +12,17 @@ public class ImageProcessor {
 
 	public static void main(String[] args) {
 		try {
-			BufferedImage img = ImageIO.read(new File("16x16/images.png"));
+			BufferedImage img = ImageIO.read(new File("Text.png"));
 			/*byte[] pixels = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
 			for(byte b : pixels) {
 				System.out.println(b);
 			}*/
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd hh:mm:ss");
 			System.out.println("Starting at : "+sdf.format(new Date()));
-			int[][] res = convertTo2DWithoutUsingGetRGB(img);
+			getBWImage(img);
+			//processImage(img);
 			System.out.println("Ending at   : "+sdf.format(new Date()));
-			System.out.println("Size : "+res.length+"x"+res[0].length);
-			for(int i=0;i<res.length;i++) {
-				for(int j=0;j<res[i].length;j++) {
-					System.out.print(""+res[i][j]+" ");
-				}
-				System.out.println();
-			}
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -36,16 +30,29 @@ public class ImageProcessor {
 
 	}
 	
+	public static void processImage(BufferedImage img) {
+		int[][] res = convertTo2DWithoutUsingGetRGB(img);
+		System.out.println("Size : "+res.length+"x"+res[0].length);
+		for(int i=0;i<res.length;i++) {
+			for(int j=0;j<res[i].length;j++) {
+				System.out.print(""+res[i][j]+" ");
+			}
+			System.out.println();
+		}
+	}
+	
 	public static int[][] getBWImage(BufferedImage img) {
 		int[][] res = convertTo2DWithoutUsingGetRGB(img);
 		int[][] byteRes = new int[res.length][res[0].length];
+		System.out.println("Size : "+res.length+"x"+res[0].length);
 		
 		for(int i=0;i<res.length;i++){
   		  for(int j=0; j<res[i].length;j++) {
   			  
-  			  byteRes[i][j] =  (res[i][j] >= -14000000 ? 1 : 0);
+  			  byteRes[i][j] =  (res[i][j] >= 0 ? 0 : 1);
+  			  System.out.print(byteRes[i][j]);
   		  }
-  		  //System.out.println();
+  		  System.out.println();
   	  }
 		
 		return byteRes;
@@ -53,14 +60,14 @@ public class ImageProcessor {
 	
 	public static int[][] convertTo2DWithoutUsingGetRGB(BufferedImage image) {
 
-	      final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+	      //final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 	      final int width = image.getWidth();
 	      final int height = image.getHeight();
-	      final boolean hasAlphaChannel = image.getAlphaRaster() != null;
+	      //final boolean hasAlphaChannel = image.getAlphaRaster() != null;
 	      System.out.println("Type : "+image.getType());
 
 	      int[][] result = new int[height][width];
-	      if (hasAlphaChannel) {
+	      /*if (hasAlphaChannel) {
 	         final int pixelLength = 4;
 	         for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
 	            int argb = 0;
@@ -75,16 +82,16 @@ public class ImageProcessor {
 	               row++;
 	            }
 	         }
-	      } else if(image.getType() == 13) {
+	      } else */
+	      //if(image.getType() == 13 || image.getType() == 6) {
 	    	  for(int i=0;i<image.getHeight();i++){
 	    		  for(int j=0; j<image.getWidth();j++) {
-	    			  int rgb = image.getRGB(i, j);
-	    			  //System.out.print(rgb+"\t");
-	    			  result[i][j] = rgb; // >= -16000000 ? 1 : 0
+	    			  int rgb = image.getRGB(j, i);
+	    			  result[i][j] = rgb; 
 	    		  }
-	    		  //System.out.println();
 	    	  }
-	      } else {
+	      //}
+	    	  /*else {
 	         final int pixelLength = 3;
 	         for (int pixel = 0, row = 0, col = 0; pixel < pixels.length; pixel += pixelLength) {
 	            int argb = 0;
@@ -99,7 +106,7 @@ public class ImageProcessor {
 	               row++;
 	            }
 	         }
-	      }
+	      }*/
 
 	      return result;
 	   }
