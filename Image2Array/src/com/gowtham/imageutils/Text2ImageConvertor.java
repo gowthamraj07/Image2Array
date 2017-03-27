@@ -179,7 +179,7 @@ public class Text2ImageConvertor {
 	}
 	
 	public static BufferedImage transformToLEDMatrix(String text) {
-		BufferedImage img =  rotate(flipHorizondally(getBufferedImage(text)));
+		BufferedImage img =  rotate((getBufferedImage(text)));
 		return crop(img);
 	}
 }

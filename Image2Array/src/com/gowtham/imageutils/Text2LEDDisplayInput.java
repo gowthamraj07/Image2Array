@@ -11,7 +11,7 @@ public class Text2LEDDisplayInput {
 		//வரவேற்கிறோம்
 		//சென்னை - கோயம்புத்தூர்
 		int res[][] = ImageProcessor.getBWImage(
-				Text2ImageConvertor.transformToLEDMatrix("சென்னை - கோயம்புத்தூர்")
+				Text2ImageConvertor.transformToLEDMatrix("Chennai")
 				);
 		
 		File inputFile = new File("input.bin");
